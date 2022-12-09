@@ -33,3 +33,8 @@
 
 # Videos
 *.mp4
+
+# MacOs exclusives
+*.DS_store
+
+code/build/
