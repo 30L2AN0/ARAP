@@ -10,7 +10,7 @@
  *   INF574 Digital Representation and Analysis of Shapes (2019/20)			     *
  * ========================================================================= */
 
-#include <bits/stdc++.h>
+// #include <bits/stdc++.h>
 #include <chrono>
 
 #ifndef HALFEDGE_DS_HEADER
