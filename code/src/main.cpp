@@ -3,25 +3,15 @@
 #include <ostream>
 #include <igl/readOFF.h>
 #include <igl/writeOFF.h>
-// #include <igl/doublearea.h>
-// #include <igl/massmatrix.h>
-// #include <igl/invert_diag.h>
-// #include <igl/jet.h>
-
-// #include <igl/gaussian_curvature.h>
-// #include <igl/per_vertex_normals.h>
-// #include <igl/per_face_normals.h>
 
 #include "HalfedgeBuilder.cpp"
-// #include "SphereGeneration.cpp"
-// #include "LoopSubdivision.cpp"
 #include "Transformation.cpp"
 
 using namespace Eigen; // to use the classes provided by Eigen library
 using namespace std;
 
+MatrixXd V0;
 MatrixXd V;
-// MatrixXd V1;
 MatrixXi F;
 
 // MeshDeformation *deformation;
@@ -32,98 +22,65 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 	if (key == '1')
 	{
 		HalfedgeBuilder *builder = new HalfedgeBuilder();
-		HalfedgeDS he = (builder->createMeshWithFaces(V.rows(), F)); // create the half-edge representation
+		HalfedgeDS he = (builder->createMeshWithFaces(V0.rows(), F)); // create the half-edge representation
 
-		// Constraints for tower
-		// const int nbConstraints = 25 * 2 + 16 * 2;
-		// Eigen::VectorXi constraintsIds(nbConstraints);
-		// Eigen::MatrixXd constraints(nbConstraints, 3);
-		// for (size_t id = 0; id < 25; id++)
-		// {
-		// 	constraintsIds(id) = id;
-		// 	constraints.row(id) = V.row(id);
-		// 	constraintsIds(25 + id) = 25 + id;
-		// 	constraints.row(25 + id) = V.row(25 + id) + Eigen::RowVector3d(75, -90, 0);
-		// }
-		// for (size_t id = 0; id < 16; id++)
-		// {
-		// 	constraintsIds(50 + id) = 50 + id;
-		// 	constraints.row(50 + id) = V.row(50 + id);
-		// 	constraintsIds(50 + 16 + id) = 338 - 16 + id;
-		// 	constraints.row(50 + 16 + id) = V.row(338 - 16 + id) + Eigen::RowVector3d(75, -90, 0);
-		// }
-		// ~Constraints for tower
-
-		// Constraints for cactus
-		const int nbVertices = V.rows();
-		std::vector<int> verticesIds;
-		verticesIds.reserve(10);
-		int nbLowVertices = 0;
-		int highestVertexId;
-		for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
-		{
-			if (V(vertexId, 2) < .1)
-			{
-				nbLowVertices++;
-				verticesIds.push_back(vertexId);
-			}
-			if (V(vertexId, 2) > .89)
-			{
-				highestVertexId = vertexId;
-			}
-		}
-		const int nbConstraints = nbLowVertices + 1;
+		//----- Constraints for tower -----
+		const int nbConstraints = 25 * 2 + 16 * 2;
 		Eigen::VectorXi constraintsIds(nbConstraints);
 		Eigen::MatrixXd constraints(nbConstraints, 3);
-		for (size_t id = 0; id < nbLowVertices; id++)
+		for (size_t id = 0; id < 25; id++)
 		{
-			constraintsIds(id) = verticesIds[id];
-			constraints.row(id) = V.row(verticesIds[id]);
+			constraintsIds(id) = id;
+			constraints.row(id) = V0.row(id);
+			constraintsIds(25 + id) = 25 + id;
+			constraints.row(25 + id) = V0.row(25 + id) + Eigen::RowVector3d(75, -90, 0);
 		}
-		constraintsIds(nbLowVertices) = highestVertexId;
-		constraints.row(nbLowVertices) = V.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
-		// ~Constraints for cactus
+		for (size_t id = 0; id < 16; id++)
+		{
+			constraintsIds(50 + id) = 50 + id;
+			constraints.row(50 + id) = V0.row(50 + id);
+			constraintsIds(50 + 16 + id) = 338 - 16 + id;
+			constraints.row(50 + 16 + id) = V0.row(338 - 16 + id) + Eigen::RowVector3d(75, -90, 0);
+		}
+		//----- ~Constraints for tower -----
 
-		std::cout << "faces: " << std::endl
-				  << F << std::endl
-				  << std::endl;
-		Eigen::MatrixXd V1 = laplacianEditing(V, he, constraintsIds, constraints);
-		std::cout << "constraintsIds: " << std::endl
-				  << constraintsIds << std::endl
-				  << std::endl;
-		std::cout << "constraints: " << std::endl
-				  << constraints << std::endl
-				  << std::endl;
-		std::cout << "nb vertices: " << std::endl
-				  << V.rows() << std::endl
-				  << std::endl;
-		std::cout << "V before: " << std::endl
-				  << V << std::endl
-				  << std::endl;
-		std::cout << "V after: " << std::endl
-				  << V1 << std::endl
-				  << std::endl;
-		// std::cout << "highest vertex: " << std::endl
-		// 		  << V.row(highestVertexId) << std::endl
-		// 		  << std::endl;
+		//----- Constraints for cactus -----
+		// const int nbVertices = V0.rows();
+		// std::vector<int> verticesIds;
+		// verticesIds.reserve(10);
+		// int nbLowVertices = 0;
+		// int highestVertexId;
+		// for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
+		// {
+		// 	if (V0(vertexId, 2) < .1)
+		// 	{
+		// 		nbLowVertices++;
+		// 		verticesIds.push_back(vertexId);
+		// 	}
+		// 	if (V0(vertexId, 2) > .89)
+		// 	{
+		// 		highestVertexId = vertexId;
+		// 	}
+		// }
+		// const int nbConstraints = nbLowVertices + 1;
+		// Eigen::VectorXi constraintsIds(nbConstraints);
+		// Eigen::MatrixXd constraints(nbConstraints, 3);
+		// for (size_t id = 0; id < nbLowVertices; id++)
+		// {
+		// 	constraintsIds(id) = verticesIds[id];
+		// 	constraints.row(id) = V0.row(verticesIds[id]);
+		// }
+		// constraintsIds(nbLowVertices) = highestVertexId;
+		// constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
+		//----- ~Constraints for cactus -----
+		
+		Eigen::MatrixXd V = laplacianEditing(V0, he, constraintsIds, constraints);
 		viewer.data().clear();
-		viewer.data().set_mesh(V1, F);
+		viewer.data().set_mesh(V, F);
 		return true;
 	}
 	if (key == '2')
 	{
-		// HalfedgeBuilder *builder = new HalfedgeBuilder();
-		// HalfedgeDS he = (builder->createMeshWithFaces(V.rows(), F)); // create the half-edge representation
-		// LoopSubdivision *loop = new LoopSubdivision(V, F, he);		 //
-		// loop->subdivide();											 // perform one round subdivision
-		// loop->print(0);
-
-		// // update the current mesh
-		// V = loop->getVertexCoordinates(); // update vertex coordinates
-		// F = loop->getFaces();
-		// viewer.data().clear();
-		// viewer.data().set_mesh(V, F);
-		// return true;
 	}
 
 	if (key == 'S' || key == 's') // write the mesh to file (OFF format)
@@ -160,19 +117,17 @@ void createOctagon(MatrixXd &Vertices, MatrixXi &Faces)
 		5, 1, 4;
 }
 
-// ------------ main program ----------------
 int main(int argc, char *argv[])
 {
-
 	if (argc < 2)
 	{
 		std::cout << "Creating an octagon" << std::endl;
-		createOctagon(V, F);
+		createOctagon(V0, F);
 	}
 	else
 	{
 		std::cout << "reading input file: " << argv[1] << std::endl;
-		igl::readOFF(argv[1], V, F);
+		igl::readOFF(argv[1], V0, F);
 	}
 
 	// we never change V0
@@ -183,8 +138,8 @@ int main(int argc, char *argv[])
 			  << "Press 'S' save the current mesh to file" << std::endl;
 
 	viewer.callback_key_down = &key_down;
-	viewer.data().set_mesh(V, F);
+	viewer.data().set_mesh(V0, F);
 
-	viewer.core(0).align_camera_center(V, F);
+	viewer.core(0).align_camera_center(V0, F);
 	viewer.launch();
 }
