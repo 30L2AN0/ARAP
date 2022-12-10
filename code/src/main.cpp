@@ -5,7 +5,7 @@
 #include <igl/writeOFF.h>
 
 #include "HalfedgeBuilder.cpp"
-#include "Transformation.cpp"
+#include "LaplacianEditing.cpp"
 
 using namespace Eigen; // to use the classes provided by Eigen library
 using namespace std;
@@ -25,53 +25,53 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 		HalfedgeDS he = (builder->createMeshWithFaces(V0.rows(), F)); // create the half-edge representation
 
 		//----- Constraints for tower -----
-		const int nbConstraints = 25 * 2 + 16 * 2;
-		Eigen::VectorXi constraintsIds(nbConstraints);
-		Eigen::MatrixXd constraints(nbConstraints, 3);
-		for (size_t id = 0; id < 25; id++)
-		{
-			constraintsIds(id) = id;
-			constraints.row(id) = V0.row(id);
-			constraintsIds(25 + id) = 25 + id;
-			constraints.row(25 + id) = V0.row(25 + id) + Eigen::RowVector3d(75, -90, 0);
-		}
-		for (size_t id = 0; id < 16; id++)
-		{
-			constraintsIds(50 + id) = 50 + id;
-			constraints.row(50 + id) = V0.row(50 + id);
-			constraintsIds(50 + 16 + id) = 338 - 16 + id;
-			constraints.row(50 + 16 + id) = V0.row(338 - 16 + id) + Eigen::RowVector3d(75, -90, 0);
-		}
+		// const int nbConstraints = 25 * 2 + 16 * 2;
+		// Eigen::VectorXi constraintsIds(nbConstraints);
+		// Eigen::MatrixXd constraints(nbConstraints, 3);
+		// for (size_t id = 0; id < 25; id++)
+		// {
+		// 	constraintsIds(id) = id;
+		// 	constraints.row(id) = V0.row(id);
+		// 	constraintsIds(25 + id) = 25 + id;
+		// 	constraints.row(25 + id) = V0.row(25 + id) + Eigen::RowVector3d(75, -90, 0);
+		// }
+		// for (size_t id = 0; id < 16; id++)
+		// {
+		// 	constraintsIds(50 + id) = 50 + id;
+		// 	constraints.row(50 + id) = V0.row(50 + id);
+		// 	constraintsIds(50 + 16 + id) = 338 - 16 + id;
+		// 	constraints.row(50 + 16 + id) = V0.row(338 - 16 + id) + Eigen::RowVector3d(75, -90, 0);
+		// }
 		//----- ~Constraints for tower -----
 
 		//----- Constraints for cactus -----
-		// const int nbVertices = V0.rows();
-		// std::vector<int> verticesIds;
-		// verticesIds.reserve(10);
-		// int nbLowVertices = 0;
-		// int highestVertexId;
-		// for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
-		// {
-		// 	if (V0(vertexId, 2) < .1)
-		// 	{
-		// 		nbLowVertices++;
-		// 		verticesIds.push_back(vertexId);
-		// 	}
-		// 	if (V0(vertexId, 2) > .89)
-		// 	{
-		// 		highestVertexId = vertexId;
-		// 	}
-		// }
-		// const int nbConstraints = nbLowVertices + 1;
-		// Eigen::VectorXi constraintsIds(nbConstraints);
-		// Eigen::MatrixXd constraints(nbConstraints, 3);
-		// for (size_t id = 0; id < nbLowVertices; id++)
-		// {
-		// 	constraintsIds(id) = verticesIds[id];
-		// 	constraints.row(id) = V0.row(verticesIds[id]);
-		// }
-		// constraintsIds(nbLowVertices) = highestVertexId;
-		// constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
+		const int nbVertices = V0.rows();
+		std::vector<int> verticesIds;
+		verticesIds.reserve(10);
+		int nbLowVertices = 0;
+		int highestVertexId;
+		for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
+		{
+			if (V0(vertexId, 2) < .1)
+			{
+				nbLowVertices++;
+				verticesIds.push_back(vertexId);
+			}
+			if (V0(vertexId, 2) > .89)
+			{
+				highestVertexId = vertexId;
+			}
+		}
+		const int nbConstraints = nbLowVertices + 1;
+		Eigen::VectorXi constraintsIds(nbConstraints);
+		Eigen::MatrixXd constraints(nbConstraints, 3);
+		for (size_t id = 0; id < nbLowVertices; id++)
+		{
+			constraintsIds(id) = verticesIds[id];
+			constraints.row(id) = V0.row(verticesIds[id]);
+		}
+		constraintsIds(nbLowVertices) = highestVertexId;
+		constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
 		//----- ~Constraints for cactus -----
 		
 		Eigen::MatrixXd V = laplacianEditing(V0, he, constraintsIds, constraints);
