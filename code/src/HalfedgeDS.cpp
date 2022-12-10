@@ -118,7 +118,7 @@ public:
 	/** 
 	 * Return the following edge in ccw orientation around the same face
 	 **/
-	int getNext(int e)
+	int getNext(int e) const
 	{
 		return T[sizeT * e + 1];
 	}
@@ -126,7 +126,7 @@ public:
 	/** 
 	 * Return the opposite edge in the neighboring face (having opposite direction)
 	 **/
-	int getOpposite(int e)
+	int getOpposite(int e) const
 	{
 		return T[e * sizeT];
 	}
@@ -134,7 +134,7 @@ public:
 	/** 
 	 * Return the previous edge in ccw orientation around the same face
 	 **/
-	int getPrev(int e)
+	int getPrev(int e) const
 	{
 		return T[sizeT * e + 4];
 	}
@@ -142,7 +142,7 @@ public:
 	/** 
 	 * Return the target vertex incident to the half-edge (its target vertex)
 	 **/
-	int getTarget(int e)
+	int getTarget(int e) const
 	{
 		return T[sizeT * e + 2];
 	}
@@ -150,7 +150,7 @@ public:
 	/** 
 	 * Return the face containing the half-edge
 	 **/
-	int getFace(int e)
+	int getFace(int e) const
 	{
 		return T[sizeT * e + 3];
 	}
@@ -158,7 +158,7 @@ public:
 	/** 
 	 * Return a half edge incident to the vertex
 	 **/
-	int getEdge(int v)
+	int getEdge(int v) const
 	{
 		return incidentEdge[v];
 	}
@@ -166,7 +166,7 @@ public:
 	/** 
 	 * Return a half edge incident to the face
 	 **/
-	int getEdgeInFace(int f)
+	int getEdgeInFace(int f) const
 	{
 		return faces[f];
 	}
@@ -174,7 +174,7 @@ public:
 	/** 
 	 * Return the number of vertices
 	 **/
-	int sizeOfVertices()
+	int sizeOfVertices() const
 	{
 		return nVertices;
 	}
@@ -182,7 +182,7 @@ public:
 	/** 
 	 * Return the number of half-edges
 	 **/
-	int sizeOfHalfedges()
+	int sizeOfHalfedges() const
 	{
 		return nHalfedges;
 	}
