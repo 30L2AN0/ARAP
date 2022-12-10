@@ -52,6 +52,9 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
     Eigen::SparseMatrix<double> identity(nbVertices, nbVertices);
     identity.setIdentity();
     differentialCoordinates += identity;
+    // TEEEEEST
+    differentialCoordinates = differentialCoordinates.transpose();
+    // ~TEEEEEST
     std::cout << "differentialCoordinates: " << std::endl
               << MatrixXd(differentialCoordinates) << std::endl
               << std::endl;
