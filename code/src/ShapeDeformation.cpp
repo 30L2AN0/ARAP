@@ -3,6 +3,8 @@
 
 #include <map>
 
+// #include "LaplacianEditing.cpp"
+
 using namespace Eigen;
 using namespace std;
 
@@ -13,22 +15,16 @@ public:
     /** 
      * Initialize the data structures
      **/
-    MeshDeformation(MatrixXd &V_original, MatrixXi &F_original)
+    MeshDeformation(MatrixXd &V_original, MatrixXi &F_original, MatrixXd &V_initial_guess)
     {
-        // double c = cos(2.11);
-        // double s = sin(2.11);
-        // Rotation << c, -s, 0,
-        //             s, c, 0,
-        //             0, 0, 1;
-        // std::cout << "Rotation:\n" << Rotation << std::endl << std::endl;
-
         std::cout << "Starting initialization..." << std::endl;
 
         V0 = &V_original;
         F = &F_original;
+        V1 = &V_initial_guess;
 
         // V1 = MatrixXd(nVertices, 3);
-        V1 = *V0;
+        // *V1 = *V0;
         
         nVertices = V_original.rows();
         nFaces = F_original.rows();
@@ -47,11 +43,11 @@ public:
         Rs.resize(nVertices, Matrix3d::Identity());
 
 
-        MatrixXd change = MatrixXd(1, 3);
+        // MatrixXd change = MatrixXd(1, 3);
 
         /* Constraines for the bar */
 
-        // change << 60., -75., 0.;
+        // change << 75., -90., 0.;
         // double cs = 1 / sqrt(2) * 100;
         // change << cs, -cs, 0.;
         // int i = 0;
@@ -66,56 +62,71 @@ public:
         // }
 
         // for (int i = 0; i < nVertices; ++i) {
-        //     if (V1(i, 1) > 145) {
+        //     if ((*V1)(i, 1) > 140) {
         //         constraints[i] = V0->row(i) + change;
         //     }
 
-        //     if (V1(i, 1) < 6) {
+        //     if ((*V1)(i, 1) < 8) {
         //         constraints[i] = V0->row(i);
         //     }
         // }
 
+
         /* Constraines for the square */
 
         // change << 0., -0.5, -0.75;
-        change << 0., -0.75, 0.;
-        for (int i = 0; i < nVertices; ++i) {
-            if (V1(i, 1) > 0.9) {
-                constraints[i] = V0->row(i) + change;
-            }
+        // // change << 0., -0.75, 0.;
+        // for (int i = 0; i < nVertices; ++i) {
+        //     if ((*V1)(i, 1) > 0.9) {
+        //         constraints[i] = V0->row(i) + change;
+        //     }
 
-            if (V1(i, 1) < 0.1) {
-                constraints[i] = V0->row(i);
-            }
-        }
+        //     if ((*V1)(i, 1) < 0.1) {
+        //         constraints[i] = V0->row(i);
+        //     }
+        // }
 
         rightSide.resize(nVertices, 3);
-        setTheLeftSide();
-        sparse_solver.analyzePattern(leftSide);
-        sparse_solver.factorize(leftSide);
-
-        std::cout << "Initialized solver" << std::endl;
+        // setTheLeftSide();
+        // sparse_solver.analyzePattern(leftSide);
+        // sparse_solver.factorize(leftSide);
+        // std::cout << "Initialized solver" << std::endl;
     }
 
     void performOneIteration() {
         // if (iterations++ > 0) {
             estimateRotations();
         // }
-
         estimatePositions();
     }
 
+    void setConstraints(const VectorXi &constraintsIds,
+                        const MatrixXd &new_constraints) {
+        constraints.clear();
+        for (int i = 0; i < constraintsIds.size(); ++i) {
+            constraints[constraintsIds[i]] = new_constraints.row(i);
+        }
+
+        setTheLeftSide();
+        sparse_solver.analyzePattern(leftSide);
+        sparse_solver.factorize(leftSide);
+        std::cout << "Initialized solver" << std::endl;
+    }
+
     /**
-     * Return the vertices
+     * Return the initial vertices
      **/
     MatrixXd getVertexCoordinates()
     {
         return *V0;
     }
 
+    /**
+     * Return the new vertices
+     **/
     MatrixXd getEstimatedVertexCoordinates()
     {
-        return V1;
+        return *V1;
     }
 
     /** 
@@ -124,30 +135,6 @@ public:
     MatrixXi getFaces()
     {
         return *F;
-    }
-
-    /** 
-     * Print the combinatorial information of the subdivided mesh <b>
-     * verbosity=0: print only the number of vertices and faces <b>
-     * verbosity=1: print all incidence relations
-     **/
-    void print(int verbosity)
-    {
-        cout << "\tn=" << nVertices << ", f=" << nFaces << endl;
-
-        if (verbosity > 0) // print all vertex coordinates and face/vertex incidence relations
-        {
-            for (int i = 0; i < nVertices; i++)
-            {
-                cout << "v" << i << ": " << V1.row(i) << endl;
-            }
-
-            std::cout << "new faces: " << nFaces << endl;
-            for (int i = 0; i < nFaces; i++)
-            {
-                cout << "f" << i << ": " << F->row(i) << endl;
-            }
-        }
     }
 
 private:
@@ -190,52 +177,49 @@ private:
         }
 
         // std::cout << "The right side is:\n" << rightSide << std::endl;
-        std::cout << "Computed" << std::endl;
+        std::cout << "Computed the right side" << std::endl;
     }
 
     void estimateRotations() {
         std::cout << "Computing the estimation rotations..." << std::endl;
-        for (int v_index = 0; v_index < nVertices; ++v_index) {
+        for (int i = 0; i < LB.outerSize(); ++i) {
             Matrix3d C = Matrix3d::Zero();
             Matrix3d id = Matrix3d::Identity();
-
-            for (int i = 0; i < LB.outerSize(); ++i) {
 
                 for (SparseMatrix<double>::InnerIterator it(LB, i); it; ++it)
                 {
                     int j = it.row();
 
-                    // count each edge only once and skip zeros
-                    if (it.value() != 0 && j > i) {
-                        C += (V0->row(j) - V0->row(i)).transpose() * (V1.row(j) - V1.row(i)) * it.value();
+                    // skip zeros
+                    if (it.value() != 0 && j != i) {
+                        C += (V0->row(j) - V0->row(i)).transpose() * (V1->row(j) - V1->row(i)) * it.value();
                     }
                 }
-            }
 
             JacobiSVD<MatrixXd> svd(C, ComputeFullU | ComputeFullV);
             id(2, 2) = (svd.matrixU() * svd.matrixV().transpose()).determinant();
             Matrix3d R = svd.matrixV() * id * svd.matrixU().transpose();
 
-            Rs[v_index] = R;
+            Rs[i] = R;
 
-            // std::cout << "Rotation for " << v_index << " :\n" << R << std::endl << std::endl;
+            // std::cout << "Rotation for " << i << " :\n" << R << std::endl << std::endl;
         }
-        std::cout << "Computed" << std::endl;
+        std::cout << "Computed rotations" << std::endl;
     }
 
     void estimatePositions() {
-        std::cout << "Computing the estimation positions..." << std::endl;
-        V1.setZero();
+        V1->setZero();
         computeTheRightSide();
+        std::cout << "Computing the estimation positions..." << std::endl;
 
-        V1.col(0) = sparse_solver.solve(rightSide.col(0));
-        // std::cout << V1 << std::endl << endl;
-        V1.col(1) = sparse_solver.solve(rightSide.col(1));
-        // std::cout << V1 << std::endl << endl;
-        V1.col(2) = sparse_solver.solve(rightSide.col(2));
-        // std::cout << V1 << std::endl << endl;
+        V1->col(0) = sparse_solver.solve(rightSide.col(0));
+        // std::cout << V1 << std::endl << std::endl;
+        V1->col(1) = sparse_solver.solve(rightSide.col(1));
+        // std::cout << V1 << std::endl << std::endl;
+        V1->col(2) = sparse_solver.solve(rightSide.col(2));
+        // std::cout << V1 << std::endl << std::endl;
 
-        std::cout << "Computed" << std::endl;
+        std::cout << "Computed positions" << std::endl;
     }
 
     SparseMatrix<double> LB; 	// descrete Laplace-Beltrami operator
@@ -244,12 +228,11 @@ private:
     SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > sparse_solver;
 
     std::vector<Matrix3d> Rs;
-    // Matrix3d Rotation;
 
     int nVertices, nFaces;   	// number of vertices, faces in the new subdivided mesh
     MatrixXd *V0; 				// vertex coordinates of the original input mesh
     MatrixXi *F;
-    MatrixXd V1;		   		// vertex coordinates of the new subdivided mesh
+    MatrixXd *V1;		   		// vertex coordinates of the new subdivided mesh
 
     int iterations = 0;
     map<int, Vector3d> constraints;
