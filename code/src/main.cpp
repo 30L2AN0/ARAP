@@ -12,8 +12,10 @@
 // #include <igl/per_vertex_normals.h>
 // #include <igl/per_face_normals.h>
 
-// #include "HalfedgeBuilder.cpp"
-#include "ShapeDeformation.cpp"
+#include "HalfedgeBuilder.cpp"
+// #include "SphereGeneration.cpp"
+// #include "LoopSubdivision.cpp"
+#include "Transformation.cpp"
 
 using namespace Eigen; // to use the classes provided by Eigen library
 using namespace std;
@@ -29,19 +31,37 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 {
 	if (key == '1')
 	{
-		deformation->performOneIteration();
-		// deformation->print(1);
-
-		// update the current mesh
-		V1 = deformation->getEstimatedVertexCoordinates(); // update vertex coordinates
+		HalfedgeBuilder *builder = new HalfedgeBuilder();
+		HalfedgeDS he = (builder->createMeshWithFaces(V.rows(), F)); // create the half-edge representation
+		Eigen::VectorXi constraintsIds(2);
+		constraintsIds << 0, 11;
+		Eigen::MatrixXd constraints(constraintsIds.rows(), 3);
+		constraints << V.row(0) + Eigen::RowVector3d(0, 0, 1), V.row(11) + Eigen::RowVector3d(0, 1, -1);
+		std::cout << "faces: " << std::endl << F << std::endl << std::endl;
+		Eigen::MatrixXd V1 = laplacianEditing(V, he, constraintsIds, constraints);
+		std::cout << "constraintsIds: " << std::endl << constraintsIds << std::endl << std::endl;
+		std::cout << "constraints: " << std::endl << constraints << std::endl << std::endl;
+		std::cout << "nb vertices: " << std::endl << V.rows() << std::endl << std::endl;
+		std::cout << "V before: " << std::endl << V << std::endl << std::endl;
+		std::cout << "V after: " << std::endl << V1 << std::endl << std::endl;
 		viewer.data().clear();
 		viewer.data().set_mesh(V1, F);
-  		// viewer.append_mesh();
-		// viewer.data().set_mesh(V0, F);
-		// viewer.data(0).set_colors(Eigen::RowVector3d(0.3, 0.8, 0.3));
-		// viewer.data(1).set_colors(Eigen::RowVector3d(0.8, 0.3, 0.3));
-
 		return true;
+	}
+	if (key == '2')
+	{
+		// HalfedgeBuilder *builder = new HalfedgeBuilder();
+		// HalfedgeDS he = (builder->createMeshWithFaces(V.rows(), F)); // create the half-edge representation
+		// LoopSubdivision *loop = new LoopSubdivision(V, F, he);		 //
+		// loop->subdivide();											 // perform one round subdivision
+		// loop->print(0);
+
+		// // update the current mesh
+		// V = loop->getVertexCoordinates(); // update vertex coordinates
+		// F = loop->getFaces();
+		// viewer.data().clear();
+		// viewer.data().set_mesh(V, F);
+		// return true;
 	}
 
 	if (key == 'S' || key == 's') // write the mesh to file (OFF format)
