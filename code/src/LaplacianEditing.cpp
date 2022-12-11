@@ -4,6 +4,7 @@
 #ifndef HALFEDGE_DS_HEADER
 #define HALFEDGE_DS_HEADER
 #include "HalfedgeDS.cpp"
+#include "HalfedgeBuilder.cpp"
 #endif
 
 Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
@@ -11,10 +12,13 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
                                         const Eigen::VectorXi &constraintsIds,
                                         const Eigen::MatrixXd &constraints) // use laplac Bletrami matrix to find neighbors
 {
+    std::cout << "started laplacianEditing" << std::endl;
+
     const int nbVertices = vertices.rows();
     Eigen::MatrixXd deltas(nbVertices, 3);
     std::vector<Eigen::Triplet<double>> differentialCoordinatesTriplets;
     differentialCoordinatesTriplets.reserve(6 * nbVertices);
+
     for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
     {
         std::list<int> neighborsIds;
@@ -38,6 +42,7 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
         }
         deltas.row(vertexId) = vertices.row(vertexId) - sumNeighbors / valency;
     }
+
     Eigen::SparseMatrix<double> differentialCoordinates(nbVertices, nbVertices);
     differentialCoordinates.setFromTriplets(differentialCoordinatesTriplets.begin(), differentialCoordinatesTriplets.end());
     Eigen::SparseMatrix<double> identity(nbVertices, nbVertices);
@@ -51,23 +56,42 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
     Aeq.setZero();
     const Eigen::VectorXd Beq = Eigen::VectorXd::Zero(nbVertices);
 
-    Eigen::VectorXd B = BBase * vertices.col(0);
-    Eigen::VectorXd newVerticesX(nbVertices);
-    igl::min_quad_with_fixed_data<double> mqwf;
-    igl::min_quad_with_fixed_precompute(A, constraintsIds, Aeq, true, mqwf);
-    igl::min_quad_with_fixed_solve(mqwf, B, constraints.col(0), Beq, newVerticesX);
-
-    B = BBase * vertices.col(1);
-    Eigen::VectorXd newVerticesY(nbVertices);
-    igl::min_quad_with_fixed_precompute(A, constraintsIds, Aeq, true, mqwf);
-    igl::min_quad_with_fixed_solve(mqwf, B, constraints.col(1), Beq, newVerticesY);
-
-    B = BBase * vertices.col(2);
-    Eigen::VectorXd newVerticesZ(nbVertices);
-    igl::min_quad_with_fixed_precompute(A, constraintsIds, Aeq, true, mqwf);
-    igl::min_quad_with_fixed_solve(mqwf, B, constraints.col(2), Beq, newVerticesZ);
-
+    Eigen::VectorXd B;
     Eigen::MatrixXd newVertices(nbVertices, 3);
-    newVertices << newVerticesX, newVerticesY, newVerticesZ;
+    for (int i = 0; i < vertices.cols(); ++i) {
+        B = BBase * vertices.col(i);
+        Eigen::VectorXd newVerticesColumn(nbVertices);
+        igl::min_quad_with_fixed_data<double> mqwf;
+        igl::min_quad_with_fixed_precompute(A, constraintsIds, Aeq, true, mqwf);
+        igl::min_quad_with_fixed_solve(mqwf, B, constraints.col(i), Beq, newVerticesColumn);
+        newVertices.col(i) = newVerticesColumn;
+    }
+
     return newVertices;
+}
+
+
+Eigen::MatrixXd static laplacianEditingFromMap(const Eigen::MatrixXd &vertices,
+                                                const Eigen::MatrixXi &faces,
+                                                const map<int, Vector3d> &constraints_map,
+                                                const SparseMatrix<double> &LB) {
+
+    HalfedgeBuilder *builder = new HalfedgeBuilder();
+    HalfedgeDS he = (builder->createMeshWithFaces(vertices.rows(), faces));
+
+    size_t nbConstraints = constraints_map.size();
+    Eigen::VectorXi constraintsIds(nbConstraints);
+    Eigen::MatrixXd constraintsValues(nbConstraints, 3);
+
+    size_t i = 0;
+    for (const auto& [point, value] : constraints_map) {
+        constraintsIds(i) = point;
+        constraintsValues.row(i) = value;
+        i++;
+    }
+
+    std::cout << "Calling original laplacianEditing" << std::endl;
+    Eigen::MatrixXd result = laplacianEditing(vertices, he, constraintsIds, constraintsValues);
+    delete builder;
+    return result;
 }
