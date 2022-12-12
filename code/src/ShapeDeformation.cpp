@@ -62,7 +62,7 @@ public:
         {
             constraints[constraintsIds[i]] = new_constraints.row(i);
         }
-
+        std::cout << "Initialized constraints from outside" << std::endl;
         initializeEquation();
     }
 
@@ -144,19 +144,43 @@ private:
 
         /* Constraints for the square with spikes */
 
-        change << 0.5, 0.75, 0.;
-        for (int i = 0; i < nVertices; ++i)
-        {
-            if (V1(i, 0) < 40.)
-            {
-                constraints[i] = V0.row(i) + change;
-            }
+        // change << 0.5, 0.75, 0.;
+        // for (int i = 0; i < nVertices; ++i)
+        // {
+        //     if (V1(i, 0) < 40.)
+        //     {
+        //         constraints[i] = V0.row(i) + change;
+        //     }
 
-            if (V1(i, 0) > 40.85)
-            {
-                constraints[i] = V0.row(i);
-            }
-        }
+        //     if (V1(i, 0) > 40.85)
+        //     {
+        //         constraints[i] = V0.row(i);
+        //     }
+        // }
+
+        /* Constraints for the small cactus */
+
+        change << .5, 0., -.4;
+
+        double maxy = 0;
+        int highestVertexId;
+
+		for (int i = 0; i < nVertices; ++i)
+		{
+			if (V0(i, 2) < .1)
+			{
+				constraints[i] = V0.row(i);
+			}
+			if (V0(i, 2) > maxy)
+			{
+				highestVertexId = i;
+                maxy = V0(i, 2);
+			}
+		}
+
+		constraints[highestVertexId] = V0.row(highestVertexId) + change;
+
+        std::cout << "Initialized constraints" << std::endl;
     }
 
     void initializeEquation()
@@ -264,6 +288,6 @@ private:
 
     std::vector<Matrix3d> Rs;
 
-    map<int, Vector3d> constraints;
+    std::map<int, Vector3d> constraints;
     bool initialized = false;
 };

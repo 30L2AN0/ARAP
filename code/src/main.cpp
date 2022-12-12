@@ -21,10 +21,10 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 {
     if (key == '1')
     {
-        HalfedgeBuilder *builder = new HalfedgeBuilder();
-        HalfedgeDS he = (builder->createMeshWithFaces(V0.rows(), F)); // create the half-edge representation
+        // HalfedgeBuilder *builder = new HalfedgeBuilder();
+        // HalfedgeDS he = (builder->createMeshWithFaces(V0.rows(), F)); // create the half-edge representation
 
-        std::cout << "Setting constraints for laplacianEditing" << std::endl;
+        // std::cout << "Setting constraints for laplacianEditing" << std::endl;
         //----- Constraints for octagon -----
         // Eigen::VectorXi constraintsIds(2);
         // Eigen::MatrixXd constraints(2, 3);
@@ -54,47 +54,50 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         //----- ~Constraints for tower -----
 
         //----- Constraints for cactus -----
-   		const int nbVertices = V0.rows();
-		std::vector<int> verticesIds;
-		verticesIds.reserve(10);
-		int nbLowVertices = 0;
-		int highestVertexId;
-		for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
-		{
-			if (V0(vertexId, 2) < .1)
-			{
-				nbLowVertices++;
-				verticesIds.push_back(vertexId);
-			}
-			if (V0(vertexId, 2) > .89)
-			{
-				highestVertexId = vertexId;
-			}
-		}
-		const int nbConstraints = nbLowVertices + 1;
-		Eigen::VectorXi constraintsIds(nbConstraints);
-		Eigen::MatrixXd constraints(nbConstraints, 3);
-		for (size_t id = 0; id < nbLowVertices; id++)
-		{
-			constraintsIds(id) = verticesIds[id];
-			constraints.row(id) = V0.row(verticesIds[id]);
-		}
-		constraintsIds(nbLowVertices) = highestVertexId;
-		constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
+   		// const int nbVertices = V0.rows();
+		// std::vector<int> verticesIds;
+		// verticesIds.reserve(10);
+		// int nbLowVertices = 0;
+		// int highestVertexId;
+		// for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
+		// {
+		// 	if (V0(vertexId, 2) < .1)
+		// 	{
+		// 		nbLowVertices++;
+		// 		verticesIds.push_back(vertexId);
+		// 	}
+		// 	if (V0(vertexId, 2) > .89)
+		// 	{
+		// 		highestVertexId = vertexId;
+		// 	}
+		// }
+		// const int nbConstraints = nbLowVertices + 1;
+		// Eigen::VectorXi constraintsIds(nbConstraints);
+		// Eigen::MatrixXd constraints(nbConstraints, 3);
+		// for (size_t id = 0; id < nbLowVertices; id++)
+		// {
+		// 	constraintsIds(id) = verticesIds[id];
+		// 	constraints.row(id) = V0.row(verticesIds[id]);
+		// }
+		// constraintsIds(nbLowVertices) = highestVertexId;
+		// constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
         //----- ~Constraints for cactus -----
         
-        std::cout << "Call laplacianEditing" << std::endl;
-        V1 = laplacianEditing(V0, he, constraintsIds, constraints);
+        // std::cout << "Call laplacianEditing / set constrains for deformation" << std::endl;
 
-        if (!deformation.isInitialized()) {
-            deformation.initialize(false);
-        }
-        deformation.setConstraints(constraintsIds, constraints);
+        // // V1 = laplacianEditing(V0, he, constraintsIds, constraints);
 
-        viewer.data().clear();
-        viewer.data().set_mesh(V1, F);
+        // deformation.setConstraints(constraintsIds, constraints);
+        // if (!deformation.isInitialized()) {
+        //     deformation.initialize(false);
+        // }
+
+        // viewer.data().clear();
+        // viewer.data().set_mesh(V1, F);
+        
         return true;
     }
+
     if (key == '2')
     {
         if (!deformation.isInitialized()) {
