@@ -15,7 +15,7 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
                                         const Eigen::MatrixXd &constraints,
                                         const Eigen::SparseMatrix<double> &LB)
 {
-    std::cout << "started laplacianEditing" << std::endl;
+    // std::cout << "started laplacianEditing" << std::endl;
 
     const int nbVertices = vertices.rows();
     Eigen::MatrixXd deltas(nbVertices, 3);
@@ -69,7 +69,6 @@ Eigen::MatrixXd static laplacianEditing(const Eigen::MatrixXd &vertices,
             if (vertexId != neighborId && it.value() != 0)
             {
                 ++valency;
-
                 neighborsIds.push_back(neighborId);
                 sumNeighbors += vertices.row(neighborId);
             }
@@ -129,7 +128,7 @@ Eigen::MatrixXd static laplacianEditingFromMap(const Eigen::MatrixXd &vertices,
         i++;
     }
 
-    std::cout << "Calling original laplacianEditing" << std::endl;
+    // std::cout << "Calling original laplacianEditing" << std::endl;
 
     // return laplacianEditing(vertices, faces, constraintsIds, constraintsValues, LB);     // choose if run with he
     return laplacianEditing(vertices, constraintsIds, constraintsValues, LB);     // choose if run without he
