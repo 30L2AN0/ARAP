@@ -53,6 +53,11 @@ public:
         return initialized;
     }
 
+    void reset() {
+        V1 = V0;
+        initialized = false;
+    }
+
     void setConstraints(const VectorXi &constraintsIds,
                         const MatrixXd &new_constraints)
     {

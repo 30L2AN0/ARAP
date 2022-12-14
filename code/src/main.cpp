@@ -26,85 +26,6 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 {
     if (key == '1')
     {
-        // HalfedgeBuilder *builder = new HalfedgeBuilder();
-        // HalfedgeDS he = (builder->createMeshWithFaces(V0.rows(), F)); // create the half-edge representation
-
-        // std::cout << "Setting constraints for laplacianEditing" << std::endl;
-        //----- Constraints for octagon -----
-        // Eigen::VectorXi constraintsIds(2);
-        // Eigen::MatrixXd constraints(2, 3);
-        // constraintsIds << 2, 4;
-        // constraints << 1., 0.5, 0.,
-        // 			   0., -1., 0.;
-        //----- ~Constraints for octagon -----
-
-        //----- Constraints for tower -----
-        // const int nbConstraints = 25 * 2 + 16 * 2;
-        // Eigen::VectorXi constraintsIds(nbConstraints);
-        // Eigen::MatrixXd constraints(nbConstraints, 3);
-        // for (size_t id = 0; id < 25; id++)
-        // {
-        // 	constraintsIds(id) = id;
-        // 	constraints.row(id) = V0.row(id);
-        // 	constraintsIds(25 + id) = 25 + id;
-        // 	constraints.row(25 + id) = V0.row(25 + id) + Eigen::RowVector3d(75, -90, 0);
-        // }
-        // for (size_t id = 0; id < 16; id++)
-        // {
-        // 	constraintsIds(50 + id) = 50 + id;
-        // 	constraints.row(50 + id) = V0.row(50 + id);
-        // 	constraintsIds(50 + 16 + id) = 338 - 16 + id;
-        // 	constraints.row(50 + 16 + id) = V0.row(338 - 16 + id) + Eigen::RowVector3d(75, -90, 0);
-        // }
-        //----- ~Constraints for tower -----
-
-        //----- Constraints for cactus -----
-        // const int nbVertices = V0.rows();
-        // std::vector<int> verticesIds;
-        // verticesIds.reserve(10);
-        // int nbLowVertices = 0;
-        // int highestVertexId;
-        // for (size_t vertexId = 0; vertexId < nbVertices; vertexId++)
-        // {
-        // 	if (V0(vertexId, 2) < .1)
-        // 	{
-        // 		nbLowVertices++;
-        // 		verticesIds.push_back(vertexId);
-        // 	}
-        // 	if (V0(vertexId, 2) > .89)
-        // 	{
-        // 		highestVertexId = vertexId;
-        // 	}
-        // }
-        // const int nbConstraints = nbLowVertices + 1;
-        // Eigen::VectorXi constraintsIds(nbConstraints);
-        // Eigen::MatrixXd constraints(nbConstraints, 3);
-        // for (size_t id = 0; id < nbLowVertices; id++)
-        // {
-        // 	constraintsIds(id) = verticesIds[id];
-        // 	constraints.row(id) = V0.row(verticesIds[id]);
-        // }
-        // constraintsIds(nbLowVertices) = highestVertexId;
-        // constraints.row(nbLowVertices) = V0.row(highestVertexId) + Eigen::RowVector3d(.5, 0, -.4);
-        //----- ~Constraints for cactus -----
-
-        // std::cout << "Call laplacianEditing / set constrains for deformation" << std::endl;
-
-        // // V1 = laplacianEditing(V0, he, constraintsIds, constraints);
-
-        // deformation.setConstraints(constraintsIds, constraints);
-        // if (!deformation.isInitialized()) {
-        //     deformation.initialize(false);
-        // }
-
-        // viewer.data().clear();
-        // viewer.data().set_mesh(V1, F);
-
-        return true;
-    }
-
-    if (key == '2')
-    {
         if (!deformation.isInitialized())
         {
             deformation.initialize(true, filename);
@@ -115,11 +36,6 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         viewer.data().clear();
         viewer.data().point_size = 10;
 
-        // viewer.append_mesh();
-        // viewer.data().set_mesh(V0, F);
-        // viewer.data(0).set_colors(Eigen::RowVector3d(0.3, 0.8, 0.3));
-        // viewer.data(1).set_colors(Eigen::RowVector3d(0.8, 0.3, 0.3));
-
         for (const auto &[point, _] : deformation.getConstraints()) {
             viewer.data().add_points(V1.row(point), RowVector3d(1., 0., 0.));
         }
@@ -129,9 +45,9 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         return true;
     }
 
-    if (key == 'R')
+    if (key == 'R' || key == 'r')
     {
-        V1 = V0;
+        deformation.reset();
         
         viewer.data().clear();
         viewer.data().set_mesh(V1, F);
@@ -193,7 +109,10 @@ int main(int argc, char *argv[])
 
     igl::opengl::glfw::Viewer viewer; // create the 3d viewer
     std::cout << "Press '1' for one iteration of shape deformation" << std::endl
-              << "Press 'S' save the current mesh to file" << std::endl;
+              << "Press 'S' for save the current mesh to file" << std::endl
+              << "Press 'R' to reset the shape to initial state" << std::endl;
+
+    viewer.core().background_color << 1., 1., 1., 1.;
 
     viewer.callback_key_down = &key_down;
     viewer.data().set_mesh(V0, F);
