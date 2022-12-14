@@ -107,6 +107,14 @@ int main(int argc, char *argv[])
 
     V1 = V0;
 
+    if (filename.find("bar") != std::string::npos) {
+        for (int i = 0; i < F.rows(); ++i) {
+            int temp = F(i, 2);
+            F(i, 2) = F(i, 1);
+            F(i, 1) = temp;
+        }
+    }
+
     igl::opengl::glfw::Viewer viewer; // create the 3d viewer
     std::cout << "Press '1' for one iteration of shape deformation" << std::endl
               << "Press 'S' for save the current mesh to file" << std::endl

@@ -188,11 +188,11 @@ private:
         }
         else if (filename.find("cactus") != std::string::npos)
         {
-            /* Constraints for the small cactus */
+            /* Constraints for the small and highres cactuses */
 
             change << .5, 0., -.4;
 
-            double maxy = 0;
+            double maxz = 0;
             int highestVertexId;
 
             for (int i = 0; i < nVertices; ++i)
@@ -201,10 +201,10 @@ private:
                 {
                     constraints[i] = V0.row(i);
                 }
-                if (V0(i, 2) > maxy)
+                if (V0(i, 2) > maxz)
                 {
                     highestVertexId = i;
-                    maxy = V0(i, 2);
+                    maxz = V0(i, 2);
                 }
             }
 
