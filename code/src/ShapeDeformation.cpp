@@ -186,7 +186,7 @@ private:
                 }
             }
         }
-        else if (filename.find("cactus_small.off") != std::string::npos)
+        else if (filename.find("cactus") != std::string::npos)
         {
             /* Constraints for the small cactus */
 
