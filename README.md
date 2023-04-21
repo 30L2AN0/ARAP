@@ -26,7 +26,7 @@ make
 ## Results
 
 ![Bent right block](report/images/folded_bar.png)
-![Report](report/ARAP-Chaussonnier_Romain-Pilipyuk_Alexandra.pdf)
+[Report](report/ARAP-Chaussonnier_Romain-Pilipyuk_Alexandra.pdf)
 
 # Done by
 Romain Chausonnier
