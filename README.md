@@ -29,6 +29,5 @@ make
 [Report](report/ARAP-Chaussonnier_Romain-Pilipyuk_Alexandra.pdf)
 
 # Done by
-Romain Chausonnier
 
-Alexandra Pilipyuk
+Bolzano
